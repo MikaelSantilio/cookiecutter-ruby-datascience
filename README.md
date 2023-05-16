@@ -8,7 +8,7 @@ Before running this script, ensure that you have Ruby installed on your system.
 ## Usage
 Run the script using the command
 ```bash
-curl -s https://raw.githubusercontent.com/MikaelSantilio/cookiecutter-ruby-datascience/master/cookiecutter.rb | ruby
+curl -o cookiecutter.rb https://raw.githubusercontent.com/MikaelSantilio/cookiecutter-ruby-datascience/master/cookiecutter.rb; ruby cookiecutter.rb
 ```
 
 
