@@ -3,7 +3,7 @@ require 'net/http'
 def get_user_input(default_value, variable_name, prompt)
   print "#{prompt} [#{default_value}]: "
   user_input = gets.chomp
-  user_input = default_value if user_input.empty? && default_valu
+  user_input = default_value if user_input.empty?
   if user_input.downcase == 'y' || user_input.downcase == 'yes'
     user_input = true
   elsif user_input.downcase == 'n' || user_input.downcase == 'no'
