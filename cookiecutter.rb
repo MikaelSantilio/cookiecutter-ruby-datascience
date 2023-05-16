@@ -3,7 +3,7 @@ require 'net/http'
 def get_user_input(default_value, variable_name, prompt)
   print "#{prompt} [#{default_value}]: "
   user_input = gets.chomp
-  user_input = default_value if user_input.empty?
+  user_input = default_value if user_input.empty? && default_valu
   if user_input.downcase == 'y' || user_input.downcase == 'yes'
     user_input = true
   elsif user_input.downcase == 'n' || user_input.downcase == 'no'
@@ -78,7 +78,7 @@ use_telegram_alerts = get_user_input('n', 'use_telegram_alerts', 'Use Telegram A
 
 Dir.mkdir(project_slug) unless Dir.exist?(project_slug)
 
-Git init
+# Git init
 Dir.chdir(project_slug) do
   system('git init')
 end
