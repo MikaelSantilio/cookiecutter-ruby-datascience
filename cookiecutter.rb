@@ -136,6 +136,8 @@ end
 gitignore_contents = Net::HTTP.get(URI('https://raw.githubusercontent.com/github/gitignore/main/Ruby.gitignore'))
 File.open("#{project_slug}/.gitignore", 'w') do |f|
   f.puts gitignore_contents
+  f.puts '.env'
+  f.puts '.idea'
 end
 
 license = nil
