@@ -114,11 +114,19 @@ File.open("#{project_slug}/Gemfile", 'w') do |f|
   # f.puts "gem \"json\"\n\n"
 end
 
+File.open("#{project_slug}/.env", 'w') do |f|
+    f.puts "PROJECT_ENV=development"
+end
+
 [
-  '.env',
   '.env.example',
+  '.env.production',
+  '.env.development',
+  '.env.test',
 ].each do |file_name|
   File.open("#{project_slug}/#{file_name}", 'w') do |f|
+    f.puts "MONGO_IPS=127.0.0.1:27017,127.0.0.1:27018" if use_mongo && mongo_odm == '2'
+    f.puts "MONGO_DB_NAME=default" if use_mongo && mongo_odm == '2'
     f.puts "MONGO_LOGIN=user" if use_mongo && mongo_odm == '2'
     f.puts "MONGO_PASSWD=passwd" if use_mongo && mongo_odm == '2'
     f.puts "MONGO_AUTH_SOURCE=admin\n\n" if use_mongo && mongo_odm == '2'
@@ -137,6 +145,9 @@ gitignore_contents = Net::HTTP.get(URI('https://raw.githubusercontent.com/github
 File.open("#{project_slug}/.gitignore", 'w') do |f|
   f.puts gitignore_contents
   f.puts '.env'
+  f.puts '.env.development'
+  f.puts '.env.production'
+  f.puts '.env.test'
   f.puts '.idea'
 end
 
@@ -184,10 +195,10 @@ File.open("#{project_slug}/config/settings.rb", 'w') do |f|
   f.puts "module Settings\n\n"
   if use_mongo && mongo_odm == '2'
     f.puts "  MONGO_DATABASES = {\n"
-    f.puts "    development: [
-      [ '192.168.0.1:27017', '192.168.1.1:27017'],
+    f.puts "    default: [
+      ENV['MONGO_IPS'].split(','),
       {
-        database: 'development',
+        database: ENV['MONGO_DB_NAME'],
         user: ENV['MONGO_LOGIN'],
         password: ENV['MONGO_PASSWD'],
         auth_source:  ENV['MONGO_AUTH_SOURCE'],
@@ -198,7 +209,7 @@ File.open("#{project_slug}/config/settings.rb", 'w') do |f|
   end
   if use_elasticsearch && elasticsearch_odm == '2'
     f.puts "  ELASTICSEARCH_DATABASES = {\n"
-    f.puts "    development: { url: 'http://localhost:9200', log: true}\n"
+    f.puts "    default: { url: 'http://localhost:9200', log: true}\n"
     f.puts "  }\n\n"
   end
   if use_telegram_alerts
@@ -231,23 +242,28 @@ Dir.mkdir("#{project_slug}/models") if !Dir.exist?("#{project_slug}/lib") && (us
 File.open("#{project_slug}/config/boot.rb", 'w') do |f|
   f.puts "require 'bundler/setup'\n\n"
   f.puts "Bundler.require(:default)\n\n"
-  f.puts "# Env\n# #{'=' * 80}\n"
+  f.puts "# Env\n# #{'=' * 78}\n"
   f.puts "dot_env_path = File.join(File.dirname(__FILE__), '../', '.env')\n"
   f.puts "raise 'No .env file found' unless File.exist?(dot_env_path)\n"
-  f.puts "Dotenv.load(dot_env_path)\n\n"
+  f.puts "Dotenv.load(dot_env_path)\n"
+  f.puts "PROJECT_ENV = ENV['PROJECT_ENV']\n\n"
+  f.puts "project_env_path = File.join(File.dirname(__FILE__), \"../.env.\#{PROJECT_ENV}\")\n"
+  f.puts "raise \"No .env.\#{PROJECT_ENV} file found\" unless File.exist?(project_env_path)\n"
+  f.puts "Dotenv.load(project_env_path)\n\n"
   if use_mongo
+    f.puts "# Mongo Logger\n# #{'=' * 78}\n"
     f.puts "Mongo::Logger.logger = Logger.new('mongo.log')\nMongo::Logger.logger.level = Logger::INFO\n\n"
   end
-  f.puts "# Settings\n# #{'=' * 80}\n"
+  f.puts "# Settings\n# #{'=' * 78}\n"
   f.puts "require_relative 'settings'\n\n"
   f.puts "ENV['TZ'] = Settings::TIMEZONE\n\n"
   if use_mongo && mongo_odm == '2'
     f.puts "EmeraldODM.databases_settings.merge!(Settings::MONGO_DATABASES)\n"
-    f.puts "EmeraldODM::Connector.database(:development) # Connect to the database for the first time\n\n"
+    f.puts "EmeraldODM::Connector.database(:default) # Connect to the database for the first time\n\n"
   end
   if use_elasticsearch && elasticsearch_odm == '2'
     f.puts "AmberODM.databases_settings.merge!(Settings::ELASTICSEARCH_DATABASES)\n"
-    f.puts "AmberODM::Connector.database(:development) # Connect to the database for the first time\n\n"
+    f.puts "AmberODM::Connector.database(:default) # Connect to the database for the first time\n\n"
   end
 
   if use_telegram_alerts
